@@ -2,14 +2,6 @@
 """
 combine_csv.py
 
-This version works with a simpler folder layout like:
-Data/
-├── Jumping/
-│   ├── jumping_1.csv
-│   ├── jumping_2.csv
-├── Standing/
-├── Still/
-├── Walking/
 
 It merges all CSVs per activity into a single combined file in "Data/combined".
 """
