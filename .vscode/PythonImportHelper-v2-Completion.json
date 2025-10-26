@@ -1,0 +1,296 @@
+[
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "rfft",
+        "importPath": "scipy.fft",
+        "description": "scipy.fft",
+        "isExtraImport": true,
+        "detail": "scipy.fft",
+        "documentation": {}
+    },
+    {
+        "label": "rfftfreq",
+        "importPath": "scipy.fft",
+        "description": "scipy.fft",
+        "isExtraImport": true,
+        "detail": "scipy.fft",
+        "documentation": {}
+    },
+    {
+        "label": "welch",
+        "importPath": "scipy.signal",
+        "description": "scipy.signal",
+        "isExtraImport": true,
+        "detail": "scipy.signal",
+        "documentation": {}
+    },
+    {
+        "label": "find_activities",
+        "kind": 2,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "def find_activities(source_root: str):\n    \"\"\"Return all activity directories under the source root.\"\"\"\n    return [os.path.join(source_root, d) for d in os.listdir(source_root) if os.path.isdir(os.path.join(source_root, d))]\ndef find_sensor_files_in_activity(activity_dir: str):\n    \"\"\"Return lists of accelerometer and gyroscope CSVs in the given activity folder.\"\"\"\n    accel_files, gyro_files = [], []\n    for root, _, files in os.walk(activity_dir):\n        for f in files:\n            low = f.lower()\n            path = os.path.join(root, f)",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "find_sensor_files_in_activity",
+        "kind": 2,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "def find_sensor_files_in_activity(activity_dir: str):\n    \"\"\"Return lists of accelerometer and gyroscope CSVs in the given activity folder.\"\"\"\n    accel_files, gyro_files = [], []\n    for root, _, files in os.walk(activity_dir):\n        for f in files:\n            low = f.lower()\n            path = os.path.join(root, f)\n            if low.endswith(\".csv\") and any(k in low for k in ACCEL_KEYWORDS):\n                accel_files.append(path)\n            elif low.endswith(\".csv\") and any(k in low for k in GYRO_KEYWORDS):",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "choose_timestamp_column",
+        "kind": 2,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "def choose_timestamp_column(df: pd.DataFrame):\n    for pattern in (r\"time\", r\"timestamp\", r\"ts\", r\"seconds\", r\"sec\", r\"elapsed\"):\n        for c in df.columns:\n            if re.search(pattern, c, flags=re.I):\n                return c\n    return df.columns[0]\ndef detect_xyz_columns(df: pd.DataFrame):\n    mapping = {}\n    for col in df.columns:\n        low = col.lower()",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "detect_xyz_columns",
+        "kind": 2,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "def detect_xyz_columns(df: pd.DataFrame):\n    mapping = {}\n    for col in df.columns:\n        low = col.lower()\n        if \"time\" in low or \"timestamp\" in low:\n            continue\n        for axis in (\"x\", \"y\", \"z\"):\n            if re.search(rf\"[^a-z]?{axis}[^a-z]?\", low):\n                mapping[axis] = col\n    if len(mapping) < 3:",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "merge_session",
+        "kind": 2,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "def merge_session(accel_path: str, gyro_path: str):\n    a = pd.read_csv(accel_path)\n    g = pd.read_csv(gyro_path)\n    ts_a = choose_timestamp_column(a)\n    ts_g = choose_timestamp_column(g)\n    common_ts = \"timestamp\"\n    a = a.rename(columns={ts_a: common_ts})\n    g = g.rename(columns={ts_g: common_ts})\n    am = detect_xyz_columns(a)\n    gm = detect_xyz_columns(g)",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "sanitize_name",
+        "kind": 2,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "def sanitize_name(name: str):\n    s = re.sub(r\"[^a-zA-Z0-9_-]\", \"_\", name.strip().lower())\n    return re.sub(r\"_+\", \"_\", s)\ndef main():\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--source-root\", \"-s\", default=\"data\", help=\"Folder containing activity subfolders\")\n    parser.add_argument(\"--out\", \"-o\", default=os.path.join(\"data\", \"combined\"), help=\"Output folder\")\n    parser.add_argument(\"--name\", \"-n\", help=\"Optional name prefix for output files\")\n    args = parser.parse_args()\n    os.makedirs(args.out, exist_ok=True)",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "def main():\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--source-root\", \"-s\", default=\"data\", help=\"Folder containing activity subfolders\")\n    parser.add_argument(\"--out\", \"-o\", default=os.path.join(\"data\", \"combined\"), help=\"Output folder\")\n    parser.add_argument(\"--name\", \"-n\", help=\"Optional name prefix for output files\")\n    args = parser.parse_args()\n    os.makedirs(args.out, exist_ok=True)\n    name_token = sanitize_name(args.name or \"\")\n    activities = find_activities(args.source_root)\n    if not activities:",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "ACCEL_KEYWORDS",
+        "kind": 5,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "ACCEL_KEYWORDS = (\"accelerometer\", \"accel\")\nGYRO_KEYWORDS = (\"gyroscope\", \"gyro\")\nOUTPUT_COLS = [\"timestamp\", \"accel_x\", \"accel_y\", \"accel_z\", \"gyro_x\", \"gyro_y\", \"gyro_z\"]\ndef find_activities(source_root: str):\n    \"\"\"Return all activity directories under the source root.\"\"\"\n    return [os.path.join(source_root, d) for d in os.listdir(source_root) if os.path.isdir(os.path.join(source_root, d))]\ndef find_sensor_files_in_activity(activity_dir: str):\n    \"\"\"Return lists of accelerometer and gyroscope CSVs in the given activity folder.\"\"\"\n    accel_files, gyro_files = [], []\n    for root, _, files in os.walk(activity_dir):",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "GYRO_KEYWORDS",
+        "kind": 5,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "GYRO_KEYWORDS = (\"gyroscope\", \"gyro\")\nOUTPUT_COLS = [\"timestamp\", \"accel_x\", \"accel_y\", \"accel_z\", \"gyro_x\", \"gyro_y\", \"gyro_z\"]\ndef find_activities(source_root: str):\n    \"\"\"Return all activity directories under the source root.\"\"\"\n    return [os.path.join(source_root, d) for d in os.listdir(source_root) if os.path.isdir(os.path.join(source_root, d))]\ndef find_sensor_files_in_activity(activity_dir: str):\n    \"\"\"Return lists of accelerometer and gyroscope CSVs in the given activity folder.\"\"\"\n    accel_files, gyro_files = [], []\n    for root, _, files in os.walk(activity_dir):\n        for f in files:",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "OUTPUT_COLS",
+        "kind": 5,
+        "importPath": "combine_csv",
+        "description": "combine_csv",
+        "peekOfCode": "OUTPUT_COLS = [\"timestamp\", \"accel_x\", \"accel_y\", \"accel_z\", \"gyro_x\", \"gyro_y\", \"gyro_z\"]\ndef find_activities(source_root: str):\n    \"\"\"Return all activity directories under the source root.\"\"\"\n    return [os.path.join(source_root, d) for d in os.listdir(source_root) if os.path.isdir(os.path.join(source_root, d))]\ndef find_sensor_files_in_activity(activity_dir: str):\n    \"\"\"Return lists of accelerometer and gyroscope CSVs in the given activity folder.\"\"\"\n    accel_files, gyro_files = [], []\n    for root, _, files in os.walk(activity_dir):\n        for f in files:\n            low = f.lower()",
+        "detail": "combine_csv",
+        "documentation": {}
+    },
+    {
+        "label": "signal_magnitude_area",
+        "kind": 2,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "def signal_magnitude_area(df, cols):\n    \"\"\"Compute Signal Magnitude Area (SMA) for given columns.\"\"\"\n    return np.mean(np.abs(df[cols]).sum(axis=1))\ndef _maybe_convert_timestamp(ts):\n    \"\"\"\n    Very small heuristic to convert large integer timestamps to seconds.\n    If timestamps look like nanoseconds (very large), convert to seconds.\n    Keep it simple: if mean > 1e12 treat as ns and divide by 1e9.\n    \"\"\"\n    if ts is None:",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "dominant_frequency",
+        "kind": 2,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "def dominant_frequency(signal, fs=FS):\n    \"\"\"Return dominant frequency in Hz using FFT (exclude DC).\"\"\"\n    if len(signal) < 2:\n        return 0.0\n    yf = np.abs(rfft(signal))\n    xf = rfftfreq(len(signal), 1.0 / fs)\n    if yf.size <= 1:\n        return 0.0\n    idx = int(np.argmax(yf[1:]) + 1)\n    return float(xf[idx])",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "spectral_energy",
+        "kind": 2,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "def spectral_energy(signal, fs=FS):\n    \"\"\"Compute spectral energy using Welch's PSD.\"\"\"\n    if len(signal) < 2:\n        return 0.0\n    f, Pxx = welch(signal, fs=fs, nperseg=min(256, len(signal)))\n    return float(np.sum(Pxx))\ndef fft_top_k(signal, k=TOP_K, fs=FS):\n    \"\"\"\n    Return top-k FFT magnitudes and their frequencies (excluding DC).\n    Returns two lists (mags, freqs), each length k (padded with zeros if needed).",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "fft_top_k",
+        "kind": 2,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "def fft_top_k(signal, k=TOP_K, fs=FS):\n    \"\"\"\n    Return top-k FFT magnitudes and their frequencies (excluding DC).\n    Returns two lists (mags, freqs), each length k (padded with zeros if needed).\n    \"\"\"\n    if len(signal) < 2:\n        return [0.0]*k, [0.0]*k\n    yf = np.abs(rfft(signal))\n    xf = rfftfreq(len(signal), 1.0 / fs)\n    if yf.size <= 1:",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "extract_features_from_window",
+        "kind": 2,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "def extract_features_from_window(window):\n    \"\"\"\n    window: pandas DataFrame of rows in the window\n    returns: dict of features\n    \"\"\"\n    features = {}\n    # accel and gyro per-axis time-domain and simple freq-domain features\n    for prefix in [\"accel\", \"gyro\"]:\n        cols = [f\"{prefix}_x\", f\"{prefix}_y\", f\"{prefix}_z\"]\n        if not all(c in window.columns for c in cols):",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "sliding_windows",
+        "kind": 2,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "def sliding_windows(data_len, window_size, overlap):\n    \"\"\"Yield start and end indices for overlapping windows.\"\"\"\n    step = int(window_size * (1 - overlap))\n    if step < 1:\n        step = 1\n    for start in range(0, data_len - window_size + 1, step):\n        yield start, start + window_size\n# Process one CSV file\ndef process_activity_file(filepath, label):\n    \"\"\"Read a combined CSV and extract windowed features.\"\"\"",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "process_activity_file",
+        "kind": 2,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "def process_activity_file(filepath, label):\n    \"\"\"Read a combined CSV and extract windowed features.\"\"\"\n    df = pd.read_csv(filepath)\n    feature_rows = []\n    # convert timestamp column if it exists (simple heuristic)\n    if \"timestamp\" in df.columns:\n        ts = _maybe_convert_timestamp(df[\"timestamp\"].values)\n        if ts is not None and len(ts) == len(df):\n            df[\"timestamp\"] = ts\n    has_time = \"timestamp\" in df.columns",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "def main():\n    print(\"Extracting features from combined files...\")\n    all_features = []\n    for file in sorted(os.listdir(INPUT_DIR)):\n        if not file.endswith(\".csv\"):\n            continue\n        # infer label same as before: second token after underscore\n        label = os.path.basename(file).split(\"_\")[1] if \"_\" in file else \"unknown\"\n        filepath = os.path.join(INPUT_DIR, file)\n        print(f\"→ Processing {file} ({label})\")",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "WINDOW_SIZE",
+        "kind": 5,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "WINDOW_SIZE = 128\nOVERLAP = 0.5\nINPUT_DIR = \"data/combined\"\nOUTPUT_DIR = \"data/features\"\nos.makedirs(OUTPUT_DIR, exist_ok=True)\nFS = 50.0\nTOP_K = 3\n# Small helper functions\ndef signal_magnitude_area(df, cols):\n    \"\"\"Compute Signal Magnitude Area (SMA) for given columns.\"\"\"",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "OVERLAP",
+        "kind": 5,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "OVERLAP = 0.5\nINPUT_DIR = \"data/combined\"\nOUTPUT_DIR = \"data/features\"\nos.makedirs(OUTPUT_DIR, exist_ok=True)\nFS = 50.0\nTOP_K = 3\n# Small helper functions\ndef signal_magnitude_area(df, cols):\n    \"\"\"Compute Signal Magnitude Area (SMA) for given columns.\"\"\"\n    return np.mean(np.abs(df[cols]).sum(axis=1))",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "INPUT_DIR",
+        "kind": 5,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "INPUT_DIR = \"data/combined\"\nOUTPUT_DIR = \"data/features\"\nos.makedirs(OUTPUT_DIR, exist_ok=True)\nFS = 50.0\nTOP_K = 3\n# Small helper functions\ndef signal_magnitude_area(df, cols):\n    \"\"\"Compute Signal Magnitude Area (SMA) for given columns.\"\"\"\n    return np.mean(np.abs(df[cols]).sum(axis=1))\ndef _maybe_convert_timestamp(ts):",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "OUTPUT_DIR",
+        "kind": 5,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "OUTPUT_DIR = \"data/features\"\nos.makedirs(OUTPUT_DIR, exist_ok=True)\nFS = 50.0\nTOP_K = 3\n# Small helper functions\ndef signal_magnitude_area(df, cols):\n    \"\"\"Compute Signal Magnitude Area (SMA) for given columns.\"\"\"\n    return np.mean(np.abs(df[cols]).sum(axis=1))\ndef _maybe_convert_timestamp(ts):\n    \"\"\"",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "FS",
+        "kind": 5,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "FS = 50.0\nTOP_K = 3\n# Small helper functions\ndef signal_magnitude_area(df, cols):\n    \"\"\"Compute Signal Magnitude Area (SMA) for given columns.\"\"\"\n    return np.mean(np.abs(df[cols]).sum(axis=1))\ndef _maybe_convert_timestamp(ts):\n    \"\"\"\n    Very small heuristic to convert large integer timestamps to seconds.\n    If timestamps look like nanoseconds (very large), convert to seconds.",
+        "detail": "extracted_features",
+        "documentation": {}
+    },
+    {
+        "label": "TOP_K",
+        "kind": 5,
+        "importPath": "extracted_features",
+        "description": "extracted_features",
+        "peekOfCode": "TOP_K = 3\n# Small helper functions\ndef signal_magnitude_area(df, cols):\n    \"\"\"Compute Signal Magnitude Area (SMA) for given columns.\"\"\"\n    return np.mean(np.abs(df[cols]).sum(axis=1))\ndef _maybe_convert_timestamp(ts):\n    \"\"\"\n    Very small heuristic to convert large integer timestamps to seconds.\n    If timestamps look like nanoseconds (very large), convert to seconds.\n    Keep it simple: if mean > 1e12 treat as ns and divide by 1e9.",
+        "detail": "extracted_features",
+        "documentation": {}
+    }
+]

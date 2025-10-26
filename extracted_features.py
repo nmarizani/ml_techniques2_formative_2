@@ -1,42 +1,21 @@
-#!/usr/bin/env python3
-"""
-Feature extraction (documented in the same clear style you like)
-
-- Reads CSV files from data/combined/
-- Windowing uses WINDOW_SIZE and OVERLAP (same logic as your original)
-- Computes time-domain and frequency-domain features
-- Adds the missing features required by the assignment:
-    * resultant acceleration mean/std
-    * resultant dominant frequency and spectral energy
-    * top-3 FFT magnitudes and frequencies (per-axis and resultant)
-- Saves a single combined output CSV: data/features/features.csv
-  (per-file feature CSVs have been removed as requested)
-"""
-
-# ===================================================
 # Imports
-# ===================================================
 import os
 import numpy as np
 import pandas as pd
 from scipy.fft import rfft, rfftfreq
 from scipy.signal import welch
 
-# ===================================================
-# Configuration (easy to change)
-# ===================================================
-WINDOW_SIZE = 128            # samples per window (you used this)
-OVERLAP = 0.5                # fraction overlap (0..1)
-INPUT_DIR = "data/combined"  # raw CSVs
-OUTPUT_DIR = "data/features" # where to write features
+# Configuration
+WINDOW_SIZE = 128
+OVERLAP = 0.5
+INPUT_DIR = "data/combined"
+OUTPUT_DIR = "data/features"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-FS = 50.0                    # sampling frequency (Hz) used for FFT/Welch
-TOP_K = 3                    # how many top FFT components to save
+FS = 50.0
+TOP_K = 3
 
-# ===================================================
-# Small helper functions (simple and readable)
-# ===================================================
+# Small helper functions
 def signal_magnitude_area(df, cols):
     """Compute Signal Magnitude Area (SMA) for given columns."""
     return np.mean(np.abs(df[cols]).sum(axis=1))
@@ -105,9 +84,7 @@ def fft_top_k(signal, k=TOP_K, fs=FS):
             top_freqs.append(0.0)
     return top_mags, top_freqs
 
-# ===================================================
-# Core feature extraction for one window (simple)
-# ===================================================
+# Core feature extraction for one window
 def extract_features_from_window(window):
     """
     window: pandas DataFrame of rows in the window
@@ -184,9 +161,7 @@ def extract_features_from_window(window):
 
     return features
 
-# ===================================================
-# Windowing helpers (kept the same style)
-# ===================================================
+# Windowing helpers
 def sliding_windows(data_len, window_size, overlap):
     """Yield start and end indices for overlapping windows."""
     step = int(window_size * (1 - overlap))
@@ -195,9 +170,7 @@ def sliding_windows(data_len, window_size, overlap):
     for start in range(0, data_len - window_size + 1, step):
         yield start, start + window_size
 
-# ===================================================
-# Process one CSV file (keeps start_time if present)
-# ===================================================
+# Process one CSV file
 def process_activity_file(filepath, label):
     """Read a combined CSV and extract windowed features."""
     df = pd.read_csv(filepath)
@@ -221,9 +194,7 @@ def process_activity_file(filepath, label):
 
     return pd.DataFrame(feature_rows)
 
-# ===================================================
 # Main: iterate files, save combined CSV only (no per-file outputs)
-# ===================================================
 def main():
     print("Extracting features from combined files...")
     all_features = []
