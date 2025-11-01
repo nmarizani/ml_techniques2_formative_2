@@ -235,4 +235,3 @@ Part of ML Techniques 2 Formative Assessment 2 coursework.
 - Rabiner, L. R. (1989). A tutorial on hidden Markov models and selected applications in speech recognition.
 - For HAR specifics, refer to related works in wearable computing conferences.
 
-```
